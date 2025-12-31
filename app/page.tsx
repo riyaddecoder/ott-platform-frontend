@@ -14,7 +14,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [selectedSort, setSelectedSort] = useState(searchParams.get('sort') || '');
   const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'));
-  const limit = 5;
+  const limit = 10;
 
   useEffect(() => {
     fetchCategories();
