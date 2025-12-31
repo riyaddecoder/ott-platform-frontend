@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { ApiResponse, PaginatedResponse } from './common';
+import { Category } from './category';
 
 export interface Video {
   id: number;
@@ -10,6 +11,7 @@ export interface Video {
   category_id: number;
   thumbnail: string;
   thumbnail_path?: string;
+  category?: Category;
 }
 
 export interface CreateVideoData {
@@ -25,9 +27,11 @@ interface VideoStore {
   videos: Video[];
   total: number;
   lastPage: number;
+  currentVideo: Video | null;
   loading: boolean;
   error: string | null;
   fetchVideos: (params?: { category?: string; sort?: string; page?: number; limit?: number }) => Promise<void>;
+  fetchVideoById: (id: number) => Promise<void>;
   createVideo: (data: CreateVideoData) => Promise<void>;
 }
 
@@ -57,12 +61,18 @@ const createVideoApi: (data: CreateVideoData) => Promise<Video> = async (data) =
   return res.json();
 };
 
+const fetchVideoByIdApi: (id: number) => Promise<ApiResponse<Video>> = async (id) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}videos/${id}`);
+  return res.json();
+};
+
 export const useVideoStore = create<VideoStore>((set, get) => ({
   videos: [],
   total: 0,
+  lastPage: 0,
+  currentVideo: null,
   loading: false,
   error: null,
-  lastPage: 0,
   fetchVideos: async (params) => {
     try {
       set({ loading: true, error: null });
@@ -70,6 +80,15 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
       set({ videos: response.data.data, total: response.data.total, lastPage: response.data.last_page, loading: false });
     } catch (error) {
       set({ error: 'Failed to fetch videos', loading: false });
+    }
+  },
+  fetchVideoById: async (id) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await fetchVideoByIdApi(id);
+      set({ currentVideo: response.data, loading: false });
+    } catch (error) {
+      set({ error: 'Failed to fetch video', loading: false });
     }
   },
   createVideo: async (data) => {
