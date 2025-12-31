@@ -25,12 +25,15 @@ interface VideoStore {
   videos: Video[];
   loading: boolean;
   error: string | null;
-  fetchVideos: () => Promise<void>;
+  fetchVideos: (params?: { category?: string; sort?: string }) => Promise<void>;
   createVideo: (data: CreateVideoData) => Promise<void>;
 }
 
-const fetchVideosApi: () => Promise<ApiResponse<Video[]>> = async () => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}videos/`);
+const fetchVideosApi: (params?: { category?: string; sort?: string }) => Promise<ApiResponse<Video[]>> = async (params) => {
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}videos/`);
+  if (params?.category) url.searchParams.set('category', params.category);
+  if (params?.sort) url.searchParams.set('sort', params.sort);
+  const res = await fetch(url.toString());
   return res.json();
 };
 
@@ -54,10 +57,10 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
   videos: [],
   loading: false,
   error: null,
-  fetchVideos: async () => {
+  fetchVideos: async (params) => {
     try {
       set({ loading: true, error: null });
-      const videos = await fetchVideosApi();
+      const videos = await fetchVideosApi(params);
       set({ videos: videos.data, loading: false });
     } catch (error) {
       set({ error: 'Failed to fetch videos', loading: false });

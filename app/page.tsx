@@ -1,17 +1,55 @@
 "use client";
 import Button from "@/components/common/Button";
 import { useVideoStore } from "@/services/video";
+import { useCategoryStore } from "@/services/category";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { videos, fetchVideos } = useVideoStore();
+  const { categories, fetchCategories } = useCategoryStore();
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
+  const [selectedSort, setSelectedSort] = useState(searchParams.get('sort') || '');
 
   useEffect(() => {
-    fetchVideos();
-  }, [fetchVideos]);
+    fetchCategories();
+  }, [fetchCategories]);
+
+  useEffect(() => {
+    const category = searchParams.get('category') || '';
+    const sort = searchParams.get('sort') || '';
+    setSelectedCategory(category);
+    setSelectedSort(sort);
+  }, [searchParams]);
+
+  useEffect(() => {
+    const params: { category?: string; sort?: string } = {};
+    if (selectedCategory) params.category = selectedCategory;
+    if (selectedSort) params.sort = selectedSort;
+    fetchVideos(params);
+  }, [fetchVideos, selectedCategory, selectedSort]);
+
+  const updateURL = (category: string, sort: string) => {
+    const params = new URLSearchParams();
+    if (category) params.set('category', category);
+    if (sort) params.set('sort', sort);
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const category = e.target.value;
+    setSelectedCategory(category);
+    updateURL(category, selectedSort);
+  };
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const sort = e.target.value;
+    setSelectedSort(sort);
+    updateURL(selectedCategory, sort);
+  };
   
   return (
     <main className="min-h-screen bg-gray-100 p-4">
@@ -30,6 +68,34 @@ export default function Home() {
                 Add New Video
               </Button>
             </Link>
+          </div>
+        </div>
+        <div className="flex gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Category:</label>
+            <select
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              className="px-3 py-2 border rounded-md"
+            >
+              <option value="">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.name}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Sort:</label>
+            <select
+              value={selectedSort}
+              onChange={handleSortChange}
+              className="px-3 py-2 border rounded-md"
+            >
+              <option value="">Default</option>
+              <option value="latest">Latest</option>
+            </select>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
