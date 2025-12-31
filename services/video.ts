@@ -45,7 +45,7 @@ const fetchVideosApi: (params?: { category?: string; sort?: string; page?: numbe
   return res.json();
 };
 
-const createVideoApi: (data: CreateVideoData) => Promise<Video> = async (data) => {
+const createVideoApi: (data: CreateVideoData) => Promise<ApiResponse<Video>> = async (data) => {
   const formData = new FormData();
   formData.append('title', data.title);
   formData.append('description', data.description);
@@ -96,7 +96,7 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
       set({ loading: true, error: null });
       const newVideo = await createVideoApi(data);
       const videos = get().videos;
-      set({ videos: [...videos, newVideo], loading: false });
+      set({ videos: [...videos, newVideo.data], loading: false });
     } catch (error) {
       set({ error: 'Failed to create video', loading: false });
       throw error;
