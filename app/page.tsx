@@ -112,20 +112,35 @@ export default function Home() {
             Total videos: {total}
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {videos.map((video) => (
-            <Link key={video.id} href={`/video/${video.id}`}>
-              <div className="bg-white rounded-lg shadow-md p-4 hover:cursor-pointer hover:shadow-lg transition-shadow">
-                <img src={`${process.env.NEXT_PUBLIC_URL}storage/${video.thumbnail_path}`} alt={video.title} className="w-full h-48 object-cover rounded-md mb-4" />
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">{video.title}</h2>
-                <p className="text-gray-600 mb-2">{video.description}</p>
-                <div className="text-sm text-gray-500">
-                  <p>Duration: {video.duration}</p>
-                </div>
-              </div>
+        {videos.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-400 mb-4">
+              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No videos found</h3>
+            <p className="text-gray-500 mb-4">Get started by adding your first video.</p>
+            <Link href="/video/new">
+              <Button>Add New Video</Button>
             </Link>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {videos.map((video) => (
+              <Link key={video.id} href={`/video/${video.id}`}>
+                <div className="bg-white rounded-lg shadow-md p-4 hover:cursor-pointer hover:shadow-lg transition-shadow">
+                  <img src={`${process.env.NEXT_PUBLIC_URL}storage/${video.thumbnail_path}`} alt={video.title} className="w-full h-48 object-cover rounded-md mb-4" />
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2">{video.title}</h2>
+                  <p className="text-gray-600 mb-2">{video.description}</p>
+                  <div className="text-sm text-gray-500">
+                    <p>Duration: {video.duration}</p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
         {total > limit && (
           <div className="flex justify-center mt-8">
             <div className="flex gap-2">
