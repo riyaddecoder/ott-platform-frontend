@@ -9,10 +9,12 @@ import { useEffect, useState } from "react";
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { videos, fetchVideos } = useVideoStore();
+  const { videos, total, fetchVideos, lastPage } = useVideoStore();
   const { categories, fetchCategories } = useCategoryStore();
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [selectedSort, setSelectedSort] = useState(searchParams.get('sort') || '');
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'));
+  const limit = 5;
 
   useEffect(() => {
     fetchCategories();
@@ -21,34 +23,41 @@ export default function Home() {
   useEffect(() => {
     const category = searchParams.get('category') || '';
     const sort = searchParams.get('sort') || '';
+    const page = parseInt(searchParams.get('page') || '1');
     setSelectedCategory(category);
     setSelectedSort(sort);
+    setCurrentPage(page);
   }, [searchParams]);
 
   useEffect(() => {
-    const params: { category?: string; sort?: string } = {};
+    const params: { category?: string; sort?: string; page?: number; limit?: number } = {};
     if (selectedCategory) params.category = selectedCategory;
     if (selectedSort) params.sort = selectedSort;
+    params.page = currentPage;
+    params.limit = limit;
     fetchVideos(params);
-  }, [fetchVideos, selectedCategory, selectedSort]);
+  }, [fetchVideos, selectedCategory, selectedSort, currentPage]);
 
-  const updateURL = (category: string, sort: string) => {
+  const updateURL = (category: string, sort: string, page: number = 1) => {
     const params = new URLSearchParams();
     if (category) params.set('category', category);
     if (sort) params.set('sort', sort);
+    if (page > 1) params.set('page', page.toString());
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const category = e.target.value;
     setSelectedCategory(category);
-    updateURL(category, selectedSort);
+    setCurrentPage(1);
+    updateURL(category, selectedSort, 1);
   };
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const sort = e.target.value;
     setSelectedSort(sort);
-    updateURL(selectedCategory, sort);
+    setCurrentPage(1);
+    updateURL(selectedCategory, sort, 1);
   };
   
   return (
@@ -98,6 +107,11 @@ export default function Home() {
             </select>
           </div>
         </div>
+        {total > 5 && (
+          <div className="mb-4 text-sm text-gray-600">
+            Total videos: {total}
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {videos.map((video) => (
             <div key={video.id} className="bg-white rounded-lg shadow-md p-4">
@@ -110,6 +124,33 @@ export default function Home() {
             </div>
           ))}
         </div>
+        {total > limit && (
+          <div className="flex justify-center mt-8">
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  const newPage = Math.max(1, currentPage - 1);
+                  setCurrentPage(newPage);
+                  updateURL(selectedCategory, selectedSort, newPage);
+                }}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <span className="px-4 py-2">Page {currentPage} of {Math.ceil(total / limit)}</span>
+              <Button
+                onClick={() => {
+                  const newPage = Math.min(lastPage, currentPage + 1);
+                  setCurrentPage(newPage);
+                  updateURL(selectedCategory, selectedSort, newPage);
+                }}
+                disabled={currentPage >= lastPage}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

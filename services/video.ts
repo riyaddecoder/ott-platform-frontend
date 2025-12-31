@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ApiResponse } from './common';
+import { ApiResponse, PaginatedResponse } from './common';
 
 export interface Video {
   id: number;
@@ -23,16 +23,20 @@ export interface CreateVideoData {
 
 interface VideoStore {
   videos: Video[];
+  total: number;
+  lastPage: number;
   loading: boolean;
   error: string | null;
-  fetchVideos: (params?: { category?: string; sort?: string }) => Promise<void>;
+  fetchVideos: (params?: { category?: string; sort?: string; page?: number; limit?: number }) => Promise<void>;
   createVideo: (data: CreateVideoData) => Promise<void>;
 }
 
-const fetchVideosApi: (params?: { category?: string; sort?: string }) => Promise<ApiResponse<Video[]>> = async (params) => {
+const fetchVideosApi: (params?: { category?: string; sort?: string; page?: number; limit?: number }) => Promise<ApiResponse<PaginatedResponse<Video>>> = async (params) => {
   const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}videos/`);
   if (params?.category) url.searchParams.set('category', params.category);
   if (params?.sort) url.searchParams.set('sort', params.sort);
+  if (params?.page) url.searchParams.set('page', params.page.toString());
+  if (params?.limit) url.searchParams.set('per_page', params.limit.toString());
   const res = await fetch(url.toString());
   return res.json();
 };
@@ -55,13 +59,15 @@ const createVideoApi: (data: CreateVideoData) => Promise<Video> = async (data) =
 
 export const useVideoStore = create<VideoStore>((set, get) => ({
   videos: [],
+  total: 0,
   loading: false,
   error: null,
+  lastPage: 0,
   fetchVideos: async (params) => {
     try {
       set({ loading: true, error: null });
-      const videos = await fetchVideosApi(params);
-      set({ videos: videos.data, loading: false });
+      const response = await fetchVideosApi(params);
+      set({ videos: response.data.data, total: response.data.total, lastPage: response.data.last_page, loading: false });
     } catch (error) {
       set({ error: 'Failed to fetch videos', loading: false });
     }
