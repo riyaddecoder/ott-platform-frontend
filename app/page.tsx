@@ -114,7 +114,7 @@ export default function Home() {
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {videos.map((video) => (
-            <div key={video.id} className="bg-white rounded-lg shadow-md p-4">
+            <div key={video.id} className="bg-white rounded-lg shadow-md p-4 hover:cursor-pointer hover:shadow-lg transition-shadow">
               <img src={`${process.env.NEXT_PUBLIC_URL}storage/${video.thumbnail_path}`} alt={video.title} className="w-full h-48 object-cover rounded-md mb-4" />
               <h2 className="text-xl font-semibold text-gray-800 mb-2">{video.title}</h2>
               <p className="text-gray-600 mb-2">{video.description}</p>
