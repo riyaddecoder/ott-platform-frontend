@@ -37,7 +37,10 @@ export default function CategoryPage() {
   };
 
   const handleDelete = async (id: number) => {
-    await deleteCategory(id);
+    const confirmed = window.confirm('This category will be deleted and all videos under it will also be deleted. Are you sure?');
+    if (confirmed) {
+      await deleteCategory(id);
+    }
   };
 
   return (
